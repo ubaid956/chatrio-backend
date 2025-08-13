@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "nodemon --experimental-modules index.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",

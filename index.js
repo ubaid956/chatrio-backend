@@ -27,7 +27,9 @@ const app = express();
 app.use(fileUpload({ useTempFiles: true }));
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Allow inline styles for privacy policy
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cors({
@@ -35,7 +37,19 @@ app.use(cors({
 }));
 
 // Serve static files from public directory
-app.use(express.static(join(__dirname, 'public')));
+app.use(express.static(join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+  }
+}));
+
+// Explicit route for privacy policy to ensure accessibility
+app.get('/privacy-policy.html', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.sendFile(join(__dirname, 'public', 'privacy-policy.html'));
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

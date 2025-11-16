@@ -3,7 +3,7 @@ import express from 'express';
 import {
      register, login,
      googleSignIn,
-     emailVerify, verifyOtp, updatePassword, getAllUsers, getUserById, profilePic, updateProfile, sendOtp, updatePushToken, getLoggedInUser, sendTestNotification, debugPushNotifications, sendAndroidNotificationTest, deleteAccount
+     emailVerify, verifyOtp, updatePassword, getAllUsers, getUserById, profilePic, updateProfile, sendOtp, updatePushToken, getLoggedInUser, sendTestNotification, sendAndroidNotificationTest, deleteAccount
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 const router = express.Router();
@@ -36,8 +36,7 @@ router.get('/me', protect, getLoggedInUser);
 // Test push notification endpoint
 router.post('/test-notification', sendTestNotification);
 
-// Debug push notification setup
-router.post('/debug-notifications', debugPushNotifications);
+// Debug push notification setup removed
 
 // Android-specific notification testing
 router.post('/test-android-notifications', sendAndroidNotificationTest);

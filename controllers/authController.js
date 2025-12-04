@@ -335,6 +335,61 @@ export const googleSignIn = async (req, res) => {
   }
 };
 
+export const appleSignIn = async (req, res) => {
+  const { email, name, appleId } = req.body;
+
+  try {
+    // 1. Find user by Apple ID
+    let user = await User.findOne({ appleId: appleId });
+
+    // 2. If not found by ID, try finding by email (if provided)
+    if (!user && email) {
+      user = await User.findOne({ email });
+
+      // If found by email but no appleId linked, link it now
+      if (user && !user.appleId) {
+        user.appleId = appleId;
+        if (user.authType === 'manual') {
+          user.authType = 'apple';
+        }
+        await user.save();
+      }
+    }
+
+    // 3. If still not found, create new user
+    if (!user) {
+      if (!email) {
+        return res.status(400).json({ message: 'Email required for new account. Please try revoking Apple Sign In permissions and trying again.' });
+      }
+
+      user = await User.create({
+        name: name || 'Apple User',
+        email,
+        pic: 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
+        appleId: appleId,
+        authType: 'apple',
+        password: 'apple_auth',
+      });
+    }
+
+    // 4. Create your own app's JWT
+    const appToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '30d',
+    });
+
+    // 5. Respond with your JWT and user info
+    res.status(200).json({
+      token: appToken,
+      user,
+    });
+
+  } catch (err) {
+    console.error('Apple Sign-In Error:', err);
+    res.status(401).json({ message: 'Apple authentication failed' });
+  }
+};
+
+
 
 // export const googleSignIn = async (req, res) => {
 //   const { token } = req.body;
@@ -743,6 +798,61 @@ export const updatePassword = async (req, res) => {
 //       user: {
 //         _id: user._id,
 //         name: user.name,
+
+
+export const blockUser = async (req, res) => {
+  try {
+    const { userIdToBlock } = req.body;
+    const userId = req.user._id;
+
+    if (!userIdToBlock) {
+      return res.status(400).json({ message: "User ID to block is required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user.blockedUsers.includes(userIdToBlock)) {
+      user.blockedUsers.push(userIdToBlock);
+      await user.save();
+    }
+
+    res.status(200).json({ message: "User blocked successfully", blockedUsers: user.blockedUsers });
+  } catch (error) {
+    console.error("Block user error:", error);
+    res.status(500).json({ message: "Server error while blocking user" });
+  }
+};
+
+export const unblockUser = async (req, res) => {
+  try {
+    const { userIdToUnblock } = req.body;
+    const userId = req.user._id;
+
+    if (!userIdToUnblock) {
+      return res.status(400).json({ message: "User ID to unblock is required" });
+    }
+
+    const user = await User.findById(userId);
+    user.blockedUsers = user.blockedUsers.filter(id => id.toString() !== userIdToUnblock);
+    await user.save();
+
+    res.status(200).json({ message: "User unblocked successfully", blockedUsers: user.blockedUsers });
+  } catch (error) {
+    console.error("Unblock user error:", error);
+    res.status(500).json({ message: "Server error while unblocking user" });
+  }
+};
+
+export const getBlockedUsers = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId).populate('blockedUsers', 'name pic email');
+
+    res.status(200).json({ blockedUsers: user.blockedUsers });
+  } catch (error) {
+    console.error("Get blocked users error:", error);
+    res.status(500).json({ message: "Server error while fetching blocked users" });
+  }
+};
 //         email: user.email,
 //         phone: user.phone,
 //         pic: user.pic,

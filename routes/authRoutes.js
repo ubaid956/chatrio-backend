@@ -2,20 +2,31 @@ import express from 'express';
 
 import {
      register, login,
-     googleSignIn,
-     emailVerify, verifyOtp, updatePassword, getAllUsers, getUserById, profilePic, updateProfile, sendOtp, updatePushToken, getLoggedInUser, sendTestNotification, sendAndroidNotificationTest, deleteAccount
+     googleSignIn, appleSignIn,
+     emailVerify, verifyOtp, updatePassword, getAllUsers, getUserById, profilePic, updateProfile, sendOtp, updatePushToken, getLoggedInUser, sendTestNotification, sendAndroidNotificationTest, deleteAccount,
+     blockUser, unblockUser, getBlockedUsers
 } from '../controllers/authController.js';
+import { reportUser } from '../controllers/reportController.js';
 import { protect } from '../middleware/auth.js';
 const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
 router.post('/google', googleSignIn);
+router.post('/apple', appleSignIn);
 
 router.get('/users', protect, getAllUsers)
 
 // Delete user account - MUST come before /users/:id route
 router.delete('/users/delete-account', protect, deleteAccount);
+
+// Block/Unblock routes
+router.post('/users/block', protect, blockUser);
+router.post('/users/unblock', protect, unblockUser);
+router.get('/users/blocked', protect, getBlockedUsers);
+
+// Report route
+router.post('/users/report', protect, reportUser);
 
 //get user by id and all the chats bw specific user and logged in user
 router.get('/users/:id', protect, getUserById)

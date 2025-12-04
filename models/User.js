@@ -7,9 +7,10 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   googleId: String,
+  appleId: String,
   authType: {
     type: String,
-    enum: ['google', 'manual'],
+    enum: ['google', 'manual', 'apple'],
     default: 'manual',
   },
   email: {
@@ -78,6 +79,10 @@ const userSchema = new mongoose.Schema({
     default: 'student'
   },
   pushToken: { type: String, default: null },
+  blockedUsers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
 
 }, {
   timestamps: true,
